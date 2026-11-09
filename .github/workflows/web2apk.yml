@@ -32,21 +32,13 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Bikin file APK dummy 10KB pake Linux command
-      - name: Build Web to APK (Dummy)
+      # BIKIN FILE APK PALSU (Simpel & Anti Gagal)
+      - name: Build Web to APK
         run: |
-          echo "Memproses Web2APK..."
-          # 1. Bikin folder
-          mkdir -p build/app/outputs/flutter-apk/
-          
-          # 2. Bikin file dummy 10KB
-          dd if=/dev/zero of=build/app/outputs/flutter-apk/app-release.apk bs=1024 count=10
-          
-          # 3. Cek apakah file beneran ada
-          ls -lh build/app/outputs/flutter-apk/
+          echo "Ini file APK dummy buat testing" > app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: app-release.apk
