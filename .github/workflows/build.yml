@@ -23,51 +23,34 @@ jobs:
       # 2. Extract file ZIP
       - name: Extract Source
         run: |
-          unzip source.zip -d extracted_zip
+          unzip source.zip -d ./
           
-      # 3. PINTER-PINTERAN: Cari pubspec.yaml dan pindahin ke root
-      - name: Locate and Flatten Project
-        run: |
-          # Cari file pubspec.yaml di dalam folder hasil extract
-          PUBSPEC_PATH=$(find extracted_zip -name "pubspec.yaml" | head -n 1)
-          
-          if [ -z "$PUBSPEC_PATH" ]; then
-            echo "❌ ERROR: File pubspec.yaml tidak ditemukan di dalam ZIP!"
-            exit 1
-          fi
-          
-          # Ambil folder tempat pubspec.yaml berada
-          PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
-          echo "✅ Ketemu project Flutter di folder: $PROJECT_DIR"
-          
-          # Pindahin semua isi folder project ke root (tempat kerja GitHub Actions)
-          mv "$PROJECT_DIR"/* .
-          mv "$PROJECT_DIR"/.* . 2>/dev/null || true # Buat jaga-jaga kalau ada file hidden
-          
-      # 4. Setup Java
+      # 3. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 5. Setup Flutter
+      # 4. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # 6. Get Dependencies & Build
+      # 5. Build APK (Masuk ke folder PlanetProject dulu)
       - name: Get Dependencies
+        working-directory: ./PlanetProject  # <--- KUNCI UTAMANYA DI SINI
         run: flutter pub get
 
       - name: Build APK
+        working-directory: ./PlanetProject  # <--- INI JUGA
         run: flutter build apk --${{ github.event.inputs.build_type }}
 
-      # 7. Upload APK
+      # 6. Upload APK (Ambil dari dalam folder PlanetProject)
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk-build
-          path: build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
+          path: PlanetProject/build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
