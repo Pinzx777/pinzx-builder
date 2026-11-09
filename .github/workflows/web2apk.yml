@@ -32,17 +32,19 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # Logika Utama Web to APK (Dummy buat ngetes alur)
       - name: Build Web to APK
         run: |
-          echo "Membangun Web2APK..."
-          mkdir -p build/app/outputs/flutter-apk/
+          echo "Memproses Web2APK..."
+          echo "URL: ${{ github.event.inputs.website_url }}"
+          echo "App Name: ${{ github.event.inputs.app_name }}"
           
-          # Bikin file APK dummy yang bersih (nggak 0 bytes & namanya aman)
-          echo "Ini file APK dummy untuk testing" > build/app/outputs/flutter-apk/app-release.apk
+          # Bikin folder & file APK dummy berukuran 10KB biar valid
+          mkdir -p build/app/outputs/flutter-apk/
+          dd if=/dev/zero of=build/app/outputs/flutter-apk/app-release.apk bs=1024 count=10
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          # Pastikan path-nya bener dan filenya ada
           path: build/app/outputs/flutter-apk/app-release.apk
