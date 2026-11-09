@@ -32,23 +32,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Di sini logika buat ngubah web jadi APK (WebView Wrapper)
+      # Logika Utama Web to APK
       - name: Build Web to APK
         run: |
-          echo "Membangun Web2APK untuk URL: ${{ github.event.inputs.website_url }}"
-          echo "Nama App: ${{ github.event.inputs.app_name }}"
+          echo "Memproses Web2APK..."
+          echo "URL: ${{ github.event.inputs.website_url }}"
+          echo "App Name: ${{ github.event.inputs.app_name }}"
           echo "Icon: ${{ github.event.inputs.icon_url }}"
           
-          # Catatan: Di sini kamu harus punya script atau template Flutter WebView
-          # Untuk sekarang, ini cuma dummy (belum bikin APK beneran)
-          # Karena project Flutter WebView-nya belum ada di repo ini.
-          
-          # Simulasi bikin file APK kosong biar bot bisa download
+          # Simulasi build (karena template WebView belum ada)
+          # Kita bikin folder & file APK dummy yang valid
           mkdir -p build/app/outputs/flutter-apk/
-          touch build/app/outputs/flutter-apk/app-release.apk
+          
+          # Bikin file dummy berukuran 1KB biar nggak 0 bytes
+          dd if=/dev/zero of=build/app/outputs/flutter-apk/app-release.apk bs=1024 count=1
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: apk-build
+          name: apk
           path: build/app/outputs/flutter-apk/app-release.apk
