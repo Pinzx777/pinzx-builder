@@ -23,30 +23,49 @@ jobs:
       # 2. Extract file ZIP
       - name: Extract Source
         run: |
-          unzip source.zip -d ./
+          unzip source.zip -d extracted_zip
           
-      # 3. Setup Java
+      # 3. PINTER-PINTERAN: Cari pubspec.yaml dan pindahin ke root
+      - name: Locate and Flatten Project
+        run: |
+          # Cari file pubspec.yaml di dalam folder hasil extract
+          PUBSPEC_PATH=$(find extracted_zip -name "pubspec.yaml" | head -n 1)
+          
+          if [ -z "$PUBSPEC_PATH" ]; then
+            echo "❌ ERROR: File pubspec.yaml tidak ditemukan di dalam ZIP!"
+            exit 1
+          fi
+          
+          # Ambil folder tempat pubspec.yaml berada
+          PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
+          echo "✅ Ketemu project Flutter di folder: $PROJECT_DIR"
+          
+          # Pindahin semua isi folder project ke root (tempat kerja GitHub Actions)
+          mv "$PROJECT_DIR"/* .
+          mv "$PROJECT_DIR"/.* . 2>/dev/null || true # Buat jaga-jaga kalau ada file hidden
+          
+      # 4. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 4. Setup Flutter
+      # 5. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # 5. Get Dependencies & Build
+      # 6. Get Dependencies & Build
       - name: Get Dependencies
         run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --${{ github.event.inputs.build_type }}
 
-      # 6. Upload APK
+      # 7. Upload APK
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
