@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag Release (otomatis dari bot)'
+        description: 'Tag Release'
         required: true
       build_type:
-        description: 'Tipe Build (debug/release)'
+        description: 'Tipe Build'
         required: true
         default: 'release'
 
@@ -15,65 +15,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Download file ZIP dari Release
-      - name: Download Source ZIP
-        run: |
-          curl -L -o source.zip "https://github.com/Pinzx777/pinzx-builder/releases/download/${{ github.event.inputs.tag }}/Base%20Apks.zip"
-          
-      # 2. Extract file ZIP ke folder sementara
-      - name: Extract Source
+      # 1. Download file ZIP dari Release pakai GitHub CLI
+      - name: Download ZIP from Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir temp_extract
-          unzip source.zip -d temp_extract
-          
-      # 3. ✨ SCRIPT PINTAR: Cari pubspec.yaml dan pindahin ke root
-      - name: Flatten Project Directory
+          gh release download ${{ github.event.inputs.tag }} --repo ${{ github.repository }} --pattern "*.zip" --dir ./temp_extract
+
+      # 2. Extract ZIP dan pindahin project ke root
+      - name: Extract & Flatten Project
         run: |
-          # Cari file pubspec.yaml di dalam folder temp_extract
-          PUBSPEC_PATH=$(find temp_extract -name "pubspec.yaml" | head -n 1)
+          cd temp_extract
+          unzip *.zip -d ./extracted
+          cd ..
           
+          PUBSPEC_PATH=$(find temp_extract/extracted -name "pubspec.yaml" | head -n 1)
           if [ -z "$PUBSPEC_PATH" ]; then
-            echo "❌ ERROR: File pubspec.yaml tidak ditemukan di dalam ZIP!"
+            echo "❌ File pubspec.yaml tidak ditemukan!"
             exit 1
           fi
           
-          # Ambil folder tempat pubspec.yaml berada
           PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
-          echo "✅ Project ditemukan di folder: $PROJECT_DIR"
-          
-          # Pindahkan semua isi folder project ke root workspace
           mv "$PROJECT_DIR"/* .
-          # Pindahkan juga file hidden (seperti .gitignore) kalau ada
-          mv "$PROJECT_DIR"/.[!.]* . 2>/dev/null || true
-          
-          # Bersihkan folder sementara
           rm -rf temp_extract
-          rm source.zip
-          
-      # 4. Setup Java
+
+      # 3. Setup Java & Flutter
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 5. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # 6. Get Dependencies
+      # 4. Build APK
       - name: Get Dependencies
         run: flutter pub get
 
-      # 7. Build APK
       - name: Build APK
         run: flutter build apk --${{ github.event.inputs.build_type }}
 
-      # 8. Upload APK
-      - name: Upload APK Artifact
+      # 5. Upload APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: apk-build
