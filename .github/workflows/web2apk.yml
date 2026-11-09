@@ -32,12 +32,18 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Bikin file APK dummy pake Python (ukuran 5MB biar aman)
-      - name: Build Web to APK
+      # Bikin file APK dummy 10KB pake Linux command
+      - name: Build Web to APK (Dummy)
         run: |
           echo "Memproses Web2APK..."
+          # 1. Bikin folder
           mkdir -p build/app/outputs/flutter-apk/
-          python3 -c "open('build/app/outputs/flutter-apk/app-release.apk', 'wb').write(b'\0' * 5 * 1024 * 1024)"
+          
+          # 2. Bikin file dummy 10KB
+          dd if=/dev/zero of=build/app/outputs/flutter-apk/app-release.apk bs=1024 count=10
+          
+          # 3. Cek apakah file beneran ada
+          ls -lh build/app/outputs/flutter-apk/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
