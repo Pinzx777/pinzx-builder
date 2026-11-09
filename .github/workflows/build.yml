@@ -15,29 +15,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag }}
-
+      # 1. Download file ZIP dari Release
+      - name: Download Source ZIP
+        run: |
+          curl -L -o source.zip "https://github.com/Pinzx777/pinzx-builder/releases/download/${{ github.event.inputs.tag }}/Base%20Apks.zip"
+          
+      # 2. Extract file ZIP
+      - name: Extract Source
+        run: |
+          unzip source.zip -d ./
+          
+      # 3. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
+      # 4. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
+      # 5. Get Dependencies & Build
       - name: Get Dependencies
         run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --${{ github.event.inputs.build_type }}
 
+      # 6. Upload APK
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
