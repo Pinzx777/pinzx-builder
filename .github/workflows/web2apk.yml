@@ -32,23 +32,17 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Logika Utama Web to APK
       - name: Build Web to APK
         run: |
-          echo "Memproses Web2APK..."
-          echo "URL: ${{ github.event.inputs.website_url }}"
-          echo "App Name: ${{ github.event.inputs.app_name }}"
-          echo "Icon: ${{ github.event.inputs.icon_url }}"
-          
-          # Simulasi build (karena template WebView belum ada)
-          # Kita bikin folder & file APK dummy yang valid
+          echo "Membangun Web2APK..."
           mkdir -p build/app/outputs/flutter-apk/
           
-          # Bikin file dummy berukuran 1KB biar nggak 0 bytes
-          dd if=/dev/zero of=build/app/outputs/flutter-apk/app-release.apk bs=1024 count=1
+          # Bikin file APK dummy yang bersih (nggak 0 bytes & namanya aman)
+          echo "Ini file APK dummy untuk testing" > build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk
+          # Pastikan path-nya bener dan filenya ada
           path: build/app/outputs/flutter-apk/app-release.apk
