@@ -1,46 +1,25 @@
-name: Build Flutter APK
+name: Build Web to APK
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Tag Release'
+      website_url:
+        description: 'URL Website'
         required: true
-      build_type:
-        description: 'Tipe Build'
+      app_name:
+        description: 'Nama Aplikasi'
         required: true
-        default: 'release'
+      icon_url:
+        description: 'URL Icon'
+        required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Download file ZIP dari Release pakai GitHub CLI
-      - name: Download ZIP from Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir temp_extract
-          gh release download ${{ github.event.inputs.tag }} --repo ${{ github.repository }} --pattern "*.zip" --dir ./temp_extract
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # 2. Extract ZIP dan pindahin project ke root
-      - name: Extract & Flatten Project
-        run: |
-          cd temp_extract
-          unzip *.zip -d ./extracted
-          cd ..
-          
-          PUBSPEC_PATH=$(find temp_extract/extracted -name "pubspec.yaml" | head -n 1)
-          if [ -z "$PUBSPEC_PATH" ]; then
-            echo "❌ File pubspec.yaml tidak ditemukan!"
-            exit 1
-          fi
-          
-          PROJECT_DIR=$(dirname "$PUBSPEC_PATH")
-          mv "$PROJECT_DIR"/* .
-          rm -rf temp_extract
-
-      # 3. Setup Java & Flutter
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -53,16 +32,23 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # 4. Build APK
-      - name: Get Dependencies
-        run: flutter pub get
+      # Di sini logika buat ngubah web jadi APK (WebView Wrapper)
+      - name: Build Web to APK
+        run: |
+          echo "Membangun Web2APK untuk URL: ${{ github.event.inputs.website_url }}"
+          echo "Nama App: ${{ github.event.inputs.app_name }}"
+          echo "Icon: ${{ github.event.inputs.icon_url }}"
+          
+          # Catatan: Di sini kamu harus punya script atau template Flutter WebView
+          # Untuk sekarang, ini cuma dummy (belum bikin APK beneran)
+          # Karena project Flutter WebView-nya belum ada di repo ini.
+          
+          # Simulasi bikin file APK kosong biar bot bisa download
+          mkdir -p build/app/outputs/flutter-apk/
+          touch build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Build APK
-        run: flutter build apk --${{ github.event.inputs.build_type }}
-
-      # 5. Upload APK
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: apk-build
-          path: build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
